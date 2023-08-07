@@ -69,33 +69,31 @@ class Game {
     }
   }
 
-  playGame(userMove) {
-    if (!this.moves.includes(userMove)) {
-      console.log("Invalid move. Please choose one of the following moves:");
-      console.log(this.moves.join(", "));
-      return;
-    }
+  displayMenu() {
+    console.log("Available moves:");
+    this.moves.forEach((move, index) => {
+        console.log(`${index + 1} - ${move}`);
+    });
+    console.log("0 - Exit");
+  }
 
-    const computerMove = RandomGenerator.getRandomMove(this.moves);
+  playGame(selectedMoveIndex) {
+    const userMove = this.moves[selectedMoveIndex - 1];
     const hmac = HMACGenerator.generateHMAC(this.randomKey, userMove);
-
+  
+    console.log(`HMAC key: ${hmac}\n`);
+  
+    const computerMove = RandomGenerator.getRandomMove(this.moves);
+  
     console.log(`Your move: ${userMove}`);
-    console.log(`Computer's move: ${computerMove}`);
-    console.log(`HMAC: ${hmac}`);
-
-    const userIndex = this.moves.indexOf(userMove) + 1;
+    console.log(`Computer move: ${computerMove}`);
+  
+    const userIndex = selectedMoveIndex;
     const computerIndex = this.moves.indexOf(computerMove) + 1;
     const result = this.table.getTable()[userIndex][computerIndex];
-
-    if (result === "Win") {
-      console.log("You win!");
-    } else if (result === "Lose") {
-      console.log("You lose!");
-    } else {
-      console.log("It's a draw!");
-    }
-
-    console.log(`Random key: ${this.randomKey}`);
+  
+    console.log(result === "Win" ? "You win!" : result === "Lose" ? "You lose!" : "It's a draw!");
+    console.log(`HMAC: ${this.randomKey}`);
   }
 }
 
@@ -109,8 +107,9 @@ if (args.length < 3 || args.length % 2 === 0 || new Set(args).size !== args.leng
   const game = new Game(moves);
 
   console.log("Welcome to the Rock-Paper-Scissors game!");
-  console.log("Enter 'help' to see the game rules and moves.");
-  console.log("Enter 'exit' to quit the game.");
+  console.log("Enter '?', 'help' to see the game rules and moves.");
+  console.log(`HMAC key: ${game.randomKey}`);
+  game.displayMenu();
 
   let userInput = "";
 
@@ -125,15 +124,23 @@ if (args.length < 3 || args.length % 2 === 0 || new Set(args).size !== args.leng
   readline.on("line", (input) => {
     userInput = input.trim();
 
-    if (userInput === "exit") {
+    if (userInput === "0") {
       console.log("Thanks for playing! Goodbye!");
       readline.close();
-    } else if (userInput === "help") {
+      return;
+    } else if (userInput === "?") {
       game.displayHelp();
+    } else if (parseInt(userInput) >= 1 && parseInt(userInput) <= moves.length) {
+      const selectedMoveIndex = parseInt(userInput);
+      game.playGame(selectedMoveIndex);
+      game.displayMenu(); 
     } else {
-      game.playGame(userInput);
+      console.log("Invalid input. Please enter a valid move number or 'exit'.");
+      game.displayMenu();
     }
-
-    readline.prompt();
+  
+    if (userInput !== "exit") {
+      readline.prompt();
+    }
   });
 }
